@@ -6,6 +6,8 @@ bool Rule::IsNeedRebuild() const
 {
 	if (!fs::exists(target_)) return true;
 
+	if (is_phony_) return true;
+
 	auto target_time = fs::last_write_time(target_);
 
 	for (const fs::path& dependence : dependencies_)

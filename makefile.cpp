@@ -2,6 +2,7 @@
 #include <sstream>
 #include <string>
 #include <stdexcept>
+#include <unordered_set>
 
 #include "makefile.h"
 #include "rule.h"
@@ -69,32 +70,61 @@ namespace parsing
 
   	return Rule(target, dependences, commands);
   }
+
+  std::vector<std::string> ParsePhonyTargets(std::string line)
+  {
+    std::vector<std::string> result;
+    std::string targets = LTrim(line.substr(6, line.size()));
+    if (targets.empty()) return result;
+
+    std::istringstream iss(targets);
+    std::string target;
+    while (iss >> target) result.push_back(target);
+
+    return result;
+  }
 };
 
 void MakeFile::Parse()
 {
+  std::unordered_set<std::string> phony_targets_temp;
   std::string line;
   bool first_rule = true;
 
-    while(std::getline(make_file_stream_, line))
+  while(std::getline(make_file_stream_, line))
+  {
+    std::string trimmed = parsing::LTrim(line);
+
+    if (trimmed.starts_with(".PHONY:"))
     {
-      std::string trimmed = parsing::LTrim(line);
-      if (!line.empty() && (trimmed.empty() || trimmed[0] != '#'))
+      std::vector<std::string> p = parsing::ParsePhonyTargets(line);
+      phony_targets_temp.insert(p.begin(), p.end());
+      continue;
+    }
+
+    if (!line.empty() && (trimmed.empty() || trimmed[0] != '#'))
+    {
+      Rule rule = parsing::ParseRule(line, make_file_stream_);
+      if (!rule.GetTarget().empty())
       {
-        Rule rule = parsing::ParseRule(line, make_file_stream_);
-        if (!rule.GetTarget().empty())
+        std::string target_str = rule.GetTarget().string();
+        rules_[target_str] = rule;
+        if (first_rule)
         {
-          std::string target_str = rule.GetTarget().string();
-          rules_[target_str] = rule;
-          if (first_rule)
-          {
-            first_target_ = target_str;
-            first_rule = false;
-          }
+          first_target_ = target_str;
+          first_rule = false;
         }
       }
     }
+  }
 
+  for (const auto& phony_target : phony_targets_temp) 
+  {
+    auto it = rules_.find(phony_target);
+    if (it != rules_.end())
+
+      it->second.SetPhony();
+  }
 }
 
 MakeFile::MakeFile(const std::string& filename)
