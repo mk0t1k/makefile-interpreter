@@ -1,4 +1,5 @@
 #include <fstream>
+#include <iostream>
 #include <sstream>
 #include <string>
 #include <stdexcept>
@@ -90,6 +91,7 @@ void MakeFile::Parse()
   std::unordered_set<std::string> phony_targets_temp;
   std::string line;
   bool first_rule = true;
+  bool use_default_target = executed_targets_.empty();
 
   while(std::getline(make_file_stream_, line))
   {
@@ -109,9 +111,9 @@ void MakeFile::Parse()
       {
         std::string target_str = rule.GetTarget().string();
         rules_[target_str] = rule;
-        if (first_rule)
+        if (use_default_target && first_rule)
         {
-          first_target_ = target_str;
+          executed_targets_.push_back(target_str);
           first_rule = false;
         }
       }
@@ -127,37 +129,71 @@ void MakeFile::Parse()
   }
 }
 
-MakeFile::MakeFile(const std::string& filename)
+MakeFile::MakeFile(const std::string& filename, std::vector<std::string> targets)
+  : executed_targets_(targets)
 {
   make_file_stream_.open(filename);
   if (!make_file_stream_.is_open())
-    throw std::runtime_error("Cannot open file: " + filename);
+    throw std::runtime_error("[make]: Cannot open file: " + filename);
     
   Parse(); 
 }
 
-void MakeFile::PreBuildRec(Rule& rule)
+void MakeFile::PreBuildRec(Rule& rule, const MakeOptions& options)
 {
   for (const fs::path& dependence : rule.GetDependencies())
   {
     auto it = rules_.find(dependence.string());
     if (it != rules_.end())
     {
-      PreBuildRec(it->second);
+      PreBuildRec(it->second, options);
       if (it->second.IsNeedRebuild())
-        it->second.Run();
+      {
+        it->second.Run(options.silent, options.dry_run, options.keep_going);
+      }
     }
   }
   
   if (rule.IsNeedRebuild())
-    rule.Run();
+  {
+    rule.Run(options.silent, options.dry_run, options.keep_going);
+  }
 }
 
-void MakeFile::Execute()
+void MakeFile::Execute(const MakeOptions& options)
 {
-  if (first_target_.empty() || rules_.find(first_target_) == rules_.end())
-    throw std::runtime_error("No target rule found");
+  if (executed_targets_.empty())
+    throw std::runtime_error("[make]: No target rule found");
+  
+  for (const auto& executed_target : executed_targets_)
+  {
+    if (rules_.find(executed_target) == rules_.end())
+    {
+      std::string error = "[make]: Can't find " + executed_target;
+      if (options.keep_going)
+      {
+        std::cerr << error << std::endl;
+        continue;
+      }
+      throw std::runtime_error(error);
+    }
     
-  Rule& target_rule = rules_[first_target_];
-  PreBuildRec(target_rule);
+    if (options.keep_going)
+    {
+      try
+      {
+        Rule& target_rule = rules_[executed_target];
+        PreBuildRec(target_rule, options);
+      }
+      catch (const std::exception& e)
+      {
+        std::cerr << "[make]: Error building target '" << executed_target << "': " << e.what() << std::endl;
+      }
+    }
+    else
+    {
+      Rule& target_rule = rules_[executed_target];
+      PreBuildRec(target_rule, options);
+    }
+  }
 }

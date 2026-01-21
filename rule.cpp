@@ -1,4 +1,6 @@
 #include <cstdlib>
+#include <iostream>
+#include <stdexcept>
 
 #include "rule.h"
 
@@ -16,10 +18,30 @@ bool Rule::IsNeedRebuild() const
 	return false;
 }
 
-void Rule::Run()
+bool Rule::Run(bool dry_run, bool silent, bool keep_going)
 {
-	for (std::string& command : commands_)
+	for (const std::string& command : commands_)
+	{
+		if (!silent || dry_run)
+			std::cout << command << std::endl;
+		
+		if (dry_run)
+			continue;
+		
 		int status = system(command.c_str());
+		
+		if (status != 0)
+		{
+			std::string error_msg = "Command failed: " + command;
+			if (keep_going)
+			{
+				std::cerr << "[make]: " << error_msg << std::endl;
+				return false;
+			}
+			throw std::runtime_error(error_msg);
+		}
+	}
+	return true;
 }
 
 Rule::Rule(fs::path target, 

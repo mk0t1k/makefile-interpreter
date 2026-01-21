@@ -25,5 +25,5 @@ public:
   void SetPhony() {is_phony_ = true;}
 
   bool IsNeedRebuild() const;
-  void Run();
+  bool Run(bool dry_run, bool silent, bool keep_going = false);
 };
