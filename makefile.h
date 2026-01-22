@@ -3,13 +3,7 @@
 #include <fstream>
 
 #include "rule.h"
-
-struct MakeOptions 
-{
-  bool dry_run = false;
-  bool silent = false;
-  bool keep_going = false;
-};
+#include "options.h"
 
 class MakeFile
 {

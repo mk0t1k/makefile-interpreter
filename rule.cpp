@@ -3,6 +3,7 @@
 #include <stdexcept>
 
 #include "rule.h"
+#include "options.h"
 
 bool Rule::IsNeedRebuild() const
 {
@@ -18,14 +19,14 @@ bool Rule::IsNeedRebuild() const
 	return false;
 }
 
-bool Rule::Run(bool dry_run, bool silent, bool keep_going)
+bool Rule::Run(const MakeOptions& options)
 {
 	for (const std::string& command : commands_)
 	{
-		if (!silent || dry_run)
+		if (!options.silent || options.dry_run)
 			std::cout << command << std::endl;
 		
-		if (dry_run)
+		if (options.dry_run)
 			continue;
 		
 		int status = system(command.c_str());
@@ -33,7 +34,7 @@ bool Rule::Run(bool dry_run, bool silent, bool keep_going)
 		if (status != 0)
 		{
 			std::string error_msg = "Command failed: " + command;
-			if (keep_going)
+			if (options.keep_going)
 			{
 				std::cerr << "[make]: " << error_msg << std::endl;
 				return false;

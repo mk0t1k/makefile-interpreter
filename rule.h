@@ -3,6 +3,8 @@
 #include <vector>
 #include <string>
 
+#include "options.h"
+
 namespace fs = std::filesystem;
 
 class Rule
@@ -25,5 +27,5 @@ public:
   void SetPhony() {is_phony_ = true;}
 
   bool IsNeedRebuild() const;
-  bool Run(bool dry_run, bool silent, bool keep_going = false);
+  bool Run(const MakeOptions& options);
 };

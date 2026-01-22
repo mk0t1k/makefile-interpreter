@@ -297,8 +297,7 @@ bool ArgumentParser::Parse(int argc, const char* argv[])
     {
       if (current_positional_index >= positional_arguments_.size())
       {
-        ++i;
-        continue;
+        return false;
       }
       
       if (!ProcessPositional(current_positional_index, argv[i]))

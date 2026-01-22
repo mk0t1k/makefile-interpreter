@@ -25,8 +25,16 @@ int main(int argc, char* argv[])
     return 1;
   }
   
-  MakeFile make(options.makefile_name, options.targets);
-  make.Execute(MakeOptions{options.dry_run, options.silent, options.keep_going});
+  try
+  {
+    MakeFile make(options.makefile_name, options.targets);
+    make.Execute(MakeOptions{options.dry_run, options.silent, options.keep_going});
+  }
+  catch (const std::exception& e)
+  {
+    std::cerr << e.what() << std::endl;
+    return 1;
+  }
 
   return 0;
 }
