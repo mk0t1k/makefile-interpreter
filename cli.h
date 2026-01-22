@@ -11,6 +11,7 @@ static constexpr std::size_t kMaxArgLen = 512;
 struct CliOptions 
 {
   std::string makefile_name;
+  std::string directory;
 
   std::vector<std::string> targets;
 

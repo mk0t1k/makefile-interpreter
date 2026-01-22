@@ -3,12 +3,13 @@
 #include "argparser/argparser.h"
 
 #include <iostream>
+#include <filesystem>
 
 int main(int argc, char* argv[])
 {
+  namespace fs = std::filesystem;
 
   CliOptions options;
-  options.makefile_name = GetMakefileName();
   nargparse::ArgumentParser parser = CreateMakeParser(options);
   
   if (!parser.Parse(argc, const_cast<const char**>(argv)))
@@ -18,6 +19,22 @@ int main(int argc, char* argv[])
   }
   
   CollectCliTargets(parser, options);
+  
+  
+  if (!options.directory.empty())
+  {
+    if (!fs::exists(options.directory) || !fs::is_directory(options.directory))
+    {
+      std::cerr << "[make]: Cannot change to directory '" << options.directory << "': No such file or directory\n";
+      return 1;
+    }
+    fs::current_path(options.directory);
+  }
+  
+  if (options.makefile_name.empty())
+  {
+    options.makefile_name = GetMakefileName();
+  }
   
   if (options.makefile_name.empty()) 
   {

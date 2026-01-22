@@ -23,6 +23,9 @@ nargparse::ArgumentParser CreateMakeParser(CliOptions& options)
   parser.AddArgument<std::string>("-f", "--file", &options.makefile_name, "Path to Makefile", 
                                  kNargsOptional, nullptr, "Incorrect filename");
 
+  parser.AddArgument<std::string>("-C", "--directory", &options.directory, "Change to DIRECTORY before doing anything.", 
+                                 kNargsOptional, nullptr, "Incorrect directory");
+
   parser.AddPositional<std::string>("target", "Target names (optional)", kNargsZeroOrMore);
 
   parser.AddFlag("-n", "--dry-run", &options.dry_run, "Don't actually run any recipe; just print them.");

@@ -2,6 +2,9 @@
 set CXXFLAGS=-std=c++23 -O2
 set CXX=clang++
 
+echo Cleaning old object files...
+del /Q *.o 2>nul
+
 echo Compiling object files...
 %CXX% %CXXFLAGS% -c main.cpp -o main.o
 %CXX% %CXXFLAGS% -c cli.cpp -o cli.o
