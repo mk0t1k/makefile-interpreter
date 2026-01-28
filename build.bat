@@ -27,3 +27,7 @@ if errorlevel 1 (
 )
 
 echo Build completed successfully!
+
+echo Cleaning object files after build...
+del /Q *.o *.obj 2>nul
+del /Q argparser\*.o argparser\*.obj 2>nul
