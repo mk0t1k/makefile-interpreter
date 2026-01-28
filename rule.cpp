@@ -4,6 +4,7 @@
 
 #include "rule.h"
 #include "options.h"
+#include "logger.h"
 
 bool Rule::IsNeedRebuild(const MakeOptions& options) const
 {
@@ -26,7 +27,7 @@ bool Rule::Run(const MakeOptions& options)
 	for (const std::string& command : commands_)
 	{
 		if (!options.silent || options.dry_run)
-			std::cout << command << std::endl;
+			loging::LogInfo(command);
 		
 		if (options.dry_run)
 			continue;
@@ -38,10 +39,10 @@ bool Rule::Run(const MakeOptions& options)
 			std::string error_msg = "Command failed: " + command;
 			if (options.ignore_errors)
 			{
-				std::cerr << "[make]: " << error_msg << " (ignored)" << std::endl;
+				loging::LogError(error_msg + " (ignored)");
 				continue;
 			}
-			throw std::runtime_error(error_msg);
+			throw loging::MakeException(error_msg);
 		}
 	}
 	return true;

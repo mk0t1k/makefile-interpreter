@@ -7,6 +7,7 @@
 
 #include "makefile.h"
 #include "rule.h"
+#include "logger.h"
 
 namespace parsing
 {
@@ -134,7 +135,7 @@ MakeFile::MakeFile(const std::string& filename, std::vector<std::string> targets
 {
   make_file_stream_.open(filename);
   if (!make_file_stream_.is_open())
-    throw std::runtime_error("[make]: Cannot open file: " + filename);
+    throw loging::MakeException("Cannot open file: " + filename);
     
   Parse(); 
 }
@@ -171,19 +172,19 @@ bool MakeFile::Execute(const MakeOptions& options)
   bool any_need_rebuild = false;
 
   if (executed_targets_.empty())
-    throw std::runtime_error("[make]: No target rule found");
+    throw loging::MakeException("No target rule found");
   
   for (const auto& executed_target : executed_targets_)
   {
     if (rules_.find(executed_target) == rules_.end())
     {
-      std::string error = "[make]: Can't find " + executed_target;
+      std::string error = "Can't find " + executed_target;
       if (options.keep_going)
       {
-        std::cerr << error << std::endl;
+        loging::LogError(error);
         continue;
       }
-      throw std::runtime_error(error);
+      throw loging::MakeException(error);
     }
     
     if (options.keep_going)
@@ -197,7 +198,7 @@ bool MakeFile::Execute(const MakeOptions& options)
       }
       catch (const std::exception& e)
       {
-        std::cerr << "[make]: Error building target '" << executed_target << "': " << e.what() << std::endl;
+        loging::LogError("Error building target '" + executed_target + "': " + e.what());
       }
     }
     else

@@ -1,6 +1,7 @@
 #include "makefile.h"
 #include "cli.h"
 #include "argparser/argparser.h"
+#include "logger.h"
 
 #include <iostream>
 #include <filesystem>
@@ -14,7 +15,7 @@ int main(int argc, char* argv[])
   
   if (!parser.Parse(argc, const_cast<const char**>(argv)))
   {
-    std::cerr << "[make]: Can't parse your cli command. Stop building.\n";
+    loging::LogError("Can't parse your cli command. Stop building.");
     return 1;
   }
   
@@ -25,7 +26,7 @@ int main(int argc, char* argv[])
   {
     if (!fs::exists(options.directory) || !fs::is_directory(options.directory))
     {
-      std::cerr << "[make]: Cannot change to directory '" << options.directory << "': No such file or directory\n";
+      loging::LogError("Cannot change to directory '" + options.directory + "': No such file or directory");
       return 1;
     }
     fs::current_path(options.directory);
@@ -38,7 +39,7 @@ int main(int argc, char* argv[])
   
   if (options.makefile_name.empty()) 
   {
-    std::cerr << "[make]: No targets makefile found. Stop building.\n";
+    loging::LogError("No targets makefile found. Stop building.");
     return 1;
   }
   
@@ -62,7 +63,7 @@ int main(int argc, char* argv[])
   }
   catch (const std::exception& e)
   {
-    std::cerr << e.what() << std::endl;
-    return 2;
+    loging::LogError(std::string(e.what()));
+    return 1;
   }
 }
