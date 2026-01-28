@@ -147,14 +147,14 @@ void MakeFile::PreBuildRec(Rule& rule, const MakeOptions& options)
     if (it != rules_.end())
     {
       PreBuildRec(it->second, options);
-      if (it->second.IsNeedRebuild())
+      if (it->second.IsNeedRebuild(options))
       {
         it->second.Run(options);
       }
     }
   }
   
-  if (rule.IsNeedRebuild())
+  if (rule.IsNeedRebuild(options))
   {
     rule.Run(options);
   }

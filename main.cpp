@@ -45,7 +45,13 @@ int main(int argc, char* argv[])
   try
   {
     MakeFile make(options.makefile_name, options.targets);
-    make.Execute(MakeOptions{options.dry_run, options.silent, options.keep_going});
+    make.Execute(MakeOptions{
+      options.dry_run,
+      options.silent,
+      options.keep_going,
+      options.ignore_errors,
+      options.always_make
+    });
   }
   catch (const std::exception& e)
   {

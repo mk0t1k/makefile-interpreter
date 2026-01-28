@@ -18,6 +18,8 @@ struct CliOptions
   bool dry_run = false;
   bool keep_going = false;
   bool silent = false;
+  bool always_make = false;
+  bool ignore_errors = false;
 };
 
 nargparse::ArgumentParser CreateMakeParser(CliOptions& options);

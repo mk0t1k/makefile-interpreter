@@ -5,8 +5,10 @@
 #include "rule.h"
 #include "options.h"
 
-bool Rule::IsNeedRebuild() const
+bool Rule::IsNeedRebuild(const MakeOptions& options) const
 {
+	if (options.always_make) return true;
+
 	if (!fs::exists(target_)) return true;
 
 	if (is_phony_) return true;
@@ -34,10 +36,10 @@ bool Rule::Run(const MakeOptions& options)
 		if (status != 0)
 		{
 			std::string error_msg = "Command failed: " + command;
-			if (options.keep_going)
+			if (options.ignore_errors)
 			{
-				std::cerr << "[make]: " << error_msg << std::endl;
-				return false;
+				std::cerr << "[make]: " << error_msg << " (ignored)" << std::endl;
+				continue;
 			}
 			throw std::runtime_error(error_msg);
 		}

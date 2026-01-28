@@ -26,6 +26,6 @@ public:
 
   void SetPhony() {is_phony_ = true;}
 
-  bool IsNeedRebuild() const;
+  bool IsNeedRebuild(const MakeOptions& options) const;
   bool Run(const MakeOptions& options);
 };

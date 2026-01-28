@@ -31,6 +31,8 @@ nargparse::ArgumentParser CreateMakeParser(CliOptions& options)
   parser.AddFlag("-n", "--dry-run", &options.dry_run, "Don't actually run any recipe; just print them.");
   parser.AddFlag("-s", "--silent", &options.silent, "Don't echo recipes.");
   parser.AddFlag("-k", "--keep-going", &options.keep_going, "Keep going when some targets can't be made.");
+  parser.AddFlag("-i", "--ignore-errors", &options.ignore_errors, "Ignore errors from recipes.");
+  parser.AddFlag("-B", "--always-make", &options.always_make, "Unconditionally make all targets.");
 
   return parser;
 }
