@@ -139,29 +139,37 @@ MakeFile::MakeFile(const std::string& filename, std::vector<std::string> targets
   Parse(); 
 }
 
-void MakeFile::PreBuildRec(Rule& rule, const MakeOptions& options)
+bool MakeFile::PreBuildRec(Rule& rule, const MakeOptions& options)
 {
+  bool need_rebuild = false;
+
   for (const fs::path& dependence : rule.GetDependencies())
   {
     auto it = rules_.find(dependence.string());
     if (it != rules_.end())
     {
-      PreBuildRec(it->second, options);
-      if (it->second.IsNeedRebuild(options))
-      {
-        it->second.Run(options);
-      }
+      bool dep_needs = PreBuildRec(it->second, options);
+      if (dep_needs)
+        need_rebuild = true;
     }
   }
-  
-  if (rule.IsNeedRebuild(options))
+
+  bool this_rule_needs = rule.IsNeedRebuild(options);
+  if (this_rule_needs)
+    need_rebuild = true;
+
+  if (!options.question_only && this_rule_needs)
   {
     rule.Run(options);
   }
+
+  return need_rebuild;
 }
 
-void MakeFile::Execute(const MakeOptions& options)
+bool MakeFile::Execute(const MakeOptions& options)
 {
+  bool any_need_rebuild = false;
+
   if (executed_targets_.empty())
     throw std::runtime_error("[make]: No target rule found");
   
@@ -183,7 +191,9 @@ void MakeFile::Execute(const MakeOptions& options)
       try
       {
         Rule& target_rule = rules_[executed_target];
-        PreBuildRec(target_rule, options);
+        bool need = PreBuildRec(target_rule, options);
+        if (need)
+          any_need_rebuild = true;
       }
       catch (const std::exception& e)
       {
@@ -193,7 +203,11 @@ void MakeFile::Execute(const MakeOptions& options)
     else
     {
       Rule& target_rule = rules_[executed_target];
-      PreBuildRec(target_rule, options);
+      bool need = PreBuildRec(target_rule, options);
+      if (need)
+        any_need_rebuild = true;
     }
   }
+
+  return any_need_rebuild;
 }

@@ -20,6 +20,7 @@ struct CliOptions
   bool silent = false;
   bool always_make = false;
   bool ignore_errors = false;
+  bool question = false;
 };
 
 nargparse::ArgumentParser CreateMakeParser(CliOptions& options);

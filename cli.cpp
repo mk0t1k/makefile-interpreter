@@ -33,6 +33,7 @@ nargparse::ArgumentParser CreateMakeParser(CliOptions& options)
   parser.AddFlag("-k", "--keep-going", &options.keep_going, "Keep going when some targets can't be made.");
   parser.AddFlag("-i", "--ignore-errors", &options.ignore_errors, "Ignore errors from recipes.");
   parser.AddFlag("-B", "--always-make", &options.always_make, "Unconditionally make all targets.");
+  parser.AddFlag("-q", "--question", &options.question, "Run no recipe; exit status says if up to date.");
 
   return parser;
 }

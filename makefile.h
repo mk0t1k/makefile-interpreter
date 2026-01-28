@@ -12,11 +12,11 @@ class MakeFile
 	std::vector<std::string> executed_targets_;
 
 	void Parse();
-	void PreBuildRec(Rule& rule, const MakeOptions& options);
+	bool PreBuildRec(Rule& rule, const MakeOptions& options);
 
 public:
 	MakeFile(const std::string& filename, std::vector<std::string> targets);
 	~MakeFile() = default;
 
-	void Execute(const MakeOptions& options = {});
+	bool Execute(const MakeOptions& options = {});
 };

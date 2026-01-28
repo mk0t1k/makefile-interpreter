@@ -42,22 +42,27 @@ int main(int argc, char* argv[])
     return 1;
   }
   
+  bool need_rebuild = false;
   try
   {
     MakeFile make(options.makefile_name, options.targets);
-    make.Execute(MakeOptions{
+    need_rebuild = make.Execute(MakeOptions{
       options.dry_run,
       options.silent,
       options.keep_going,
       options.ignore_errors,
-      options.always_make
+      options.always_make,
+      options.question
     });
+
+    if (options.question)
+      return need_rebuild ? 1 : 0;
+    
+    return 0;
   }
   catch (const std::exception& e)
   {
     std::cerr << e.what() << std::endl;
-    return 1;
+    return 2;
   }
-
-  return 0;
 }
