@@ -3,15 +3,18 @@
 #include "argparser/argparser.h"
 #include "logger.h"
 
-#include <iostream>
 #include <filesystem>
 
-int main(int argc, char* argv[])
+int main(int argc, const char* argv[])
 {
   namespace fs = std::filesystem;
 
   CliOptions options;
   nargparse::ArgumentParser parser = CreateMakeParser(options);
+
+  if (parser.ProcessHelp(argc, argv)) return 0;
+
+  if (parser.ProcessVersion(argc, argv)) return 0;
   
   if (!parser.Parse(argc, const_cast<const char**>(argv)))
   {

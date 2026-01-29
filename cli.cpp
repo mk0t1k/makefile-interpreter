@@ -18,7 +18,10 @@ std::string GetMakefileName()
 nargparse::ArgumentParser CreateMakeParser(CliOptions& options)
 {
   using namespace nargparse;
-  ArgumentParser parser("make", kMaxArgLen);
+  ArgumentParser parser("make", "1.0", kMaxArgLen);
+
+  parser.SetUsage("make [OPTION]... [TARGET]...");
+  parser.SetShowPositionalsInHelp(false);
 
   parser.AddArgument<std::string>("-f", "--file", &options.makefile_name, "Path to Makefile", 
                                  kNargsOptional, nullptr, "Incorrect filename");
@@ -28,6 +31,8 @@ nargparse::ArgumentParser CreateMakeParser(CliOptions& options)
 
   parser.AddPositional<std::string>("target", "Target names (optional)", kNargsZeroOrMore);
 
+  parser.AddHelp();
+  parser.AddVersion();
   parser.AddFlag("-n", "--dry-run", &options.dry_run, "Don't actually run any recipe; just print them.");
   parser.AddFlag("-s", "--silent", &options.silent, "Don't echo recipes.");
   parser.AddFlag("-k", "--keep-going", &options.keep_going, "Keep going when some targets can't be made.");

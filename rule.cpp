@@ -1,6 +1,4 @@
 #include <cstdlib>
-#include <iostream>
-#include <stdexcept>
 
 #include "rule.h"
 #include "options.h"

@@ -60,6 +60,7 @@ Now this options are available, in the future I'll extend this list
 - **`-B, --always-make`**: unconditionally consider targets out-of-date.
 - **`-q, --question`**: run no recipes; exit status is 0 if up-to-date, 1 if rebuild is needed.
 - **`-h, --help`**: shows you a list of available options and their description.
+- **`-v, --version`:** shows you a version of an aplication
 
 <div align="center">
 ⭐ If you find this tool useful, please consider giving it a star on GitHub!

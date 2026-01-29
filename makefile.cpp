@@ -1,8 +1,6 @@
 #include <fstream>
-#include <iostream>
 #include <sstream>
 #include <string>
-#include <stdexcept>
 #include <unordered_set>
 
 #include "makefile.h"
