@@ -5,8 +5,9 @@
 
 namespace nargparse {
 
-ArgumentParser::ArgumentParser(std::string program_name, size_t max_arg_len)
+ArgumentParser::ArgumentParser(const std::string& program_name, const std::string& version, size_t max_arg_len)
   : program_name(program_name)
+  , version(version)
   , max_arg_len(max_arg_len)
   , arg_count(0)
   , positional_count(0)
@@ -19,16 +20,16 @@ ArgumentParser::~ArgumentParser()
     delete arg;
 }
 
-void ArgumentParser::AddFlag(std::string short_name, std::string long_name, bool* target, std::string help,
-              bool default_value)
+void ArgumentParser::AddFlag(const std::string& short_name, const std::string& long_name, bool* target, 
+                            const std::string& help, bool default_value)
 {
   auto* arg = new Argument<bool>();
   
-  arg->short_name_ = std::move(short_name);
-  arg->long_name_ = std::move(long_name);
+  arg->short_name_ = short_name;
+  arg->long_name_ = long_name;
   
   if (!help.empty())
-    arg->name_ = std::move(help);
+    arg->name_ = help;
   else if (!arg->long_name_.empty())
     arg->name_ = arg->long_name_;
   else if (!arg->short_name_.empty() && arg->short_name_.size() > 1)
@@ -56,17 +57,27 @@ void ArgumentParser::AddHelp()
 
 void ArgumentParser::PrintHelp()
 {
-  std::cout << "Usage: "
-            << (program_name.empty() ? "program" : program_name)
-            << " [options]\n\nOptions:\n";
+  if (!custom_usage.empty())
+  {
+    std::cout << "Usage: " << custom_usage << "\n\nOptions:\n";
+  }
+  else
+  {
+    std::cout << "Usage: "
+              << (program_name.empty() ? "program" : program_name)
+              << " [options]\n\nOptions:\n";
+  }
   
   for (ArgumentBase* arg : arguments_)
   {
     if (!arg) continue;
-    
+
+    if (!show_positionals_in_help && arg->is_positional_)
+      continue;
+
     std::cout << "  ";
     bool has_option = false;
-    
+
     if (!arg->short_name_.empty() || !arg->long_name_.empty())
     {
       if (!arg->short_name_.empty())
@@ -87,14 +98,37 @@ void ArgumentParser::PrintHelp()
       has_option = true;
     }
     
+    if (!arg->name_.empty())
+    {
+      if (has_option)
+        std::cout << "  ";
+      std::cout << arg->name_;
+    }
+
     if (!arg->validation_error.empty())
-      std::cout << "  (" << arg->validation_error << ")";
-    
-    if (has_option)
+    {
+      if (!arg->name_.empty())
+        std::cout << " ";
+      std::cout << "(" << arg->validation_error << ")";
+    }
+
+    if (has_option || !arg->name_.empty() || !arg->validation_error.empty())
       std::cout << "\n";
   }
   
   std::cout << "\n";
+}
+
+void ArgumentParser::AddVersion()
+{
+  version_enabled = true;
+  static bool version_flag = false;
+  AddFlag("-v", "--version", &version_flag, "Show version", false);
+}
+
+void ArgumentParser::PrintVersion()
+{
+  std::cout << program_name << " version: " << version << '\n';
 }
 
 ArgumentBase* ArgumentParser::FindArgumentByOption(const char* token)
@@ -122,6 +156,21 @@ bool ArgumentParser::ProcessHelp(int argc, const char* argv[])
     if (std::strcmp(argv[i], "-h") == 0 || std::strcmp(argv[i], "--help") == 0)
     {
       PrintHelp();
+      return true;
+    }
+  }
+  return false;
+}
+
+bool ArgumentParser::ProcessVersion(int argc, const char* argv[])
+{
+  if (!version_enabled) return false;
+
+  for (int i = 1; i < argc; ++i)
+  {
+    if (std::strcmp(argv[i], "-v") == 0 || std::strcmp(argv[i], "--version") == 0)
+    {
+      PrintVersion();
       return true;
     }
   }
@@ -281,6 +330,9 @@ bool ArgumentParser::Parse(int argc, const char* argv[])
 {
   if (ProcessHelp(argc, argv))
     return true;
+
+  if (ProcessVersion(argc, argv))
+    return true;
   
   std::size_t current_positional_index = 0;
   
@@ -309,7 +361,7 @@ bool ArgumentParser::Parse(int argc, const char* argv[])
   return ValidateRequiredArguments();
 }
 
-int ArgumentParser::GetRepeatedCount(std::string name)
+int ArgumentParser::GetRepeatedCount(const std::string& name)
 {
   for (ArgumentBase* arg : arguments_)
   {

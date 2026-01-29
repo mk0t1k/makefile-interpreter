@@ -6,7 +6,6 @@
 namespace nargparse 
 {
 
-// Публичные типы аргументов
 enum NargsType 
 {
   kNargsRequired = 0,
@@ -15,7 +14,6 @@ enum NargsType
   kNargsOneOrMore
 };
 
-// Базовый класс для всех аргументов
 class ArgumentBase 
 {
 public:
@@ -28,7 +26,7 @@ public:
   bool is_positional_ = false;
   std::string validation_error;
   
-  int values_count_ = 0;  // количество значений для повторяющихся аргументов
+  int values_count_ = 0;
 
   ArgumentBase() = default;
   virtual ~ArgumentBase() = default;
@@ -38,7 +36,6 @@ public:
   virtual void AssignFirstValue() = 0;
 };
 
-// Шаблонный класс аргумента
 template<typename T>
 class Argument : public ArgumentBase
 {
