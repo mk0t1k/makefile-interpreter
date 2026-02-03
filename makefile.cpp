@@ -94,6 +94,14 @@ void MakeFile::Parse()
 
   while(std::getline(make_file_stream_, line))
   {
+    while (line.ends_with('\\'))
+    {
+      line.pop_back();
+      std::string next_line;
+      if (!std::getline(make_file_stream_, next_line))
+        break;
+      line += next_line;
+    }
     std::string trimmed = parsing::LTrim(line);
 
     if (trimmed.starts_with(".PHONY:"))

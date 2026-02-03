@@ -66,7 +66,7 @@ int main(int argc, const char* argv[])
   }
   catch (const std::exception& e)
   {
-    loging::LogError(std::string(e.what()));
+    std::cerr << e.what() << '\n';
     return 1;
   }
 }
