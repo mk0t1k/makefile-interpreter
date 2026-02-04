@@ -48,6 +48,14 @@ Run format:
 ./make [OPTIONS] [target...]
 ```
 
+### Testing
+
+There a dir [test_project](./test_project) with a simple c++ project for testing this interpretator, to run it you should use command:
+
+```sh
+./make.exe -C test_project -f Makefile.mk program.exe clean
+```
+
 ### Available options
 Now this options are available, in the future I'll extend this list
 
