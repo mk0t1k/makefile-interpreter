@@ -1,6 +1,5 @@
 #pragma once
 #include <unordered_map>
-#include <fstream>
 #include <optional>
 
 #include "rule.h"
@@ -12,10 +11,8 @@ class MakeFile
 	std::unordered_map<std::string, Rule> rules_;
 	std::vector<PatternRule> pattern_rules_;
 	std::unordered_map<std::string, Rule> implicit_rules_;
-	std::ifstream make_file_stream_;
 	std::vector<std::string> executed_targets_;
 
-	void Parse();
 	bool PreBuildRec(Rule& rule, const MakeOptions& options);
 	Rule* GetRuleForTarget(const std::string& target);
 
