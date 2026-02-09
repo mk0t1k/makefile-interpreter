@@ -90,7 +90,7 @@ Rule* MakeFile::GetRuleForTarget(const std::string& target)
     for (const std::string& cmd : pr.commands)
       substituted_commands.push_back(SubstituteStem(cmd, *stem));
 
-    Rule rule(fs::path(target), resolved_deps, substituted_commands);
+    Rule rule(fs::path(target), resolved_deps, substituted_commands, stem.value());
     implicit_rules_[target] = rule;
     return &implicit_rules_[target];
   }

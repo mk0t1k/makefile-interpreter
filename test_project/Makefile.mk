@@ -5,10 +5,10 @@ program.exe: main.o\
 	g++ -o program.exe main.o functions.o
 
 main.o: main.cpp functions.h
-	g++ -c main.cpp -o main.o
+	g++ -c $< -o $@
 
 functions.o: functions.cpp functions.h
-	g++ -c functions.cpp -o functions.o
+	g++ -c $< -o $@
 
 .PHONY: clean
 

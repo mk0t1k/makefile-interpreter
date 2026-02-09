@@ -13,11 +13,15 @@ class Rule
   std::vector<fs::path> dependencies_;
   std::vector<std::string> commands_;
   bool is_phony_ = false;
+  std::string stem_;
+
+  std::string PrepareCommand(std::string command);
 
 public:
-  Rule(fs::path target, 
+  Rule(fs::path target,
        std::vector<fs::path> dependencies, 
-       std::vector<std::string> commands);
+       std::vector<std::string> commands,
+       std::string stem = "");
   
   Rule() = default;
 
