@@ -120,6 +120,17 @@ namespace
     return {name, value};
   }
 
+  std::pair<std::string, std::string> ParseConditionalVar(const std::string& line)
+  {
+    size_t delim_pos = line.find("?=");
+    if (delim_pos == std::string::npos)
+      return {};
+    
+    std::string name = RTrim(line.substr(0, delim_pos));
+    std::string value = LTrim(line.substr(delim_pos + 2));
+    return {name, value};
+  }
+
   bool FindVariable(const std::string& str, size_t pos,
                         size_t* dollar, std::string* var_name,
                         size_t* end)
@@ -230,7 +241,7 @@ MakefileParseResult MakefileParser::Parse()
 
     if (trimmed.starts_with(".PHONY:"))
     {
-      line = ExpandVariables(std::move(line));
+      line = ExpandVariables(line);
       std::vector<std::string> p = ParsePhonyTargets(line);
       result.phony_targets.insert(p.begin(), p.end());
       continue;
@@ -243,6 +254,16 @@ MakefileParseResult MakefileParser::Parse()
         auto [name, value] = ParseImVar(trimmed);
         if (!name.empty())
           im_var_[name] = ExpandVariables(value);
+        continue;
+      }
+      if (trimmed.find("?=") != std::string::npos)
+      {
+        auto [name, value] = ParseConditionalVar(trimmed);
+        auto it_im = im_var_.find(name);
+        auto it_lazy = lazy_vars_.find(name);
+
+        if (it_im == im_var_.end() && it_lazy == lazy_vars_.end())
+          lazy_vars_[name] = value;
         continue;
       }
       if (trimmed.find('=') != std::string::npos)
@@ -262,7 +283,7 @@ MakefileParseResult MakefileParser::Parse()
 
       if (!target_part.empty())
       {
-        line = ExpandVariables(std::move(line));
+        line = ExpandVariables(line);
         colon_pos = line.find(':');
         target_part = (colon_pos != std::string::npos)
           ? RTrim(line.substr(0, colon_pos)) : std::string();

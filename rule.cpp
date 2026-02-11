@@ -137,7 +137,7 @@ bool Rule::Run(const MakeOptions& options)
 
 std::string Rule::PrepareCommand(std::string command, const MakeOptions& options)
 {
-  command = ExpandVariables(std::move(command), options.vars);
+  command = ExpandVariables(command, options.vars);
 
   std::string target_str = target_.string();
   std::string stem_str = stem_;
