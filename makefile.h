@@ -12,6 +12,7 @@ class MakeFile
 	std::vector<PatternRule> pattern_rules_;
 	std::unordered_map<std::string, Rule> implicit_rules_;
 	std::vector<std::string> executed_targets_;
+	std::unordered_map<std::string, std::string> vars_;
 
 	bool PreBuildRec(Rule& rule, const MakeOptions& options);
 	Rule* GetRuleForTarget(const std::string& target);

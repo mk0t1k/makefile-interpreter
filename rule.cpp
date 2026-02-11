@@ -1,9 +1,96 @@
 #include <cstdlib>
 #include <set>
+#include <unordered_set>
 
 #include "rule.h"
 #include "options.h"
 #include "logger.h"
+
+namespace
+{
+  static const std::unordered_set<std::string> kSpecialVars = {"@F", "@D", "<F", "<D", "^F", "^D"};
+
+  bool FindVariable(const std::string& str, size_t pos,
+    size_t* dollar, std::string* var_name, size_t* end)
+  {
+    while (pos < str.size())
+    {
+      size_t dollar_pos = str.find('$', pos);
+      if (dollar_pos == std::string::npos || dollar_pos + 1 >= str.size())
+        return false;
+
+      size_t var_start = 0;
+      size_t var_end = 0;
+
+      if (str[dollar_pos + 1] == '(')
+      {
+        var_start = dollar_pos + 2;
+        var_end = str.find(')', var_start);
+      }
+      else if (str[dollar_pos + 1] == '{')
+      {
+        var_start = dollar_pos + 2;
+        var_end = str.find('}', var_start);
+      }
+      else
+      {
+        pos = dollar_pos + 1;
+        continue;
+      }
+
+      if (var_end == std::string::npos)
+      {
+        pos = dollar_pos + 1;
+        continue;
+      }
+
+      *var_name = str.substr(var_start, var_end - var_start);
+      if (kSpecialVars.count(*var_name))
+      {
+        pos = dollar_pos + 1;
+        continue;
+      }
+
+      *dollar = dollar_pos;
+      *end = var_end + 1;
+      return true;
+    }
+    return false;
+  }
+
+  std::string ExpandVariables(std::string str,
+    const std::unordered_map<std::string, std::string>& vars,
+    std::set<std::string>* in_progress = nullptr)
+  {
+    std::set<std::string> local;
+    std::set<std::string>* ip = in_progress ? in_progress : &local;
+
+    size_t pos = 0;
+    size_t dollar, end_pos;
+    std::string var_name;
+
+    while (FindVariable(str, pos, &dollar, &var_name, &end_pos))
+    {
+      std::string replacement;
+      if (ip->count(var_name))
+        replacement = "";
+      else
+      {
+        ip->insert(var_name);
+        auto it = vars.find(var_name);
+        if (it != vars.end())
+          replacement = ExpandVariables(it->second, vars, ip);
+        else
+          replacement = "";
+        ip->erase(var_name);
+      }
+
+      str.replace(dollar, end_pos - dollar, replacement);
+      pos = dollar + replacement.size();
+    }
+    return str;
+  }
+}
 
 bool Rule::IsNeedRebuild(const MakeOptions& options) const
 {
@@ -25,7 +112,7 @@ bool Rule::Run(const MakeOptions& options)
 {
 	for (const std::string& com : commands_)
 	{
-		std::string command = PrepareCommand(com);
+		std::string command = PrepareCommand(com, options);
 		if (!options.silent || options.dry_run)
 			loging::LogInfo(command);
 		
@@ -48,8 +135,10 @@ bool Rule::Run(const MakeOptions& options)
 	return true;
 }
 
-std::string Rule::PrepareCommand(std::string command)
+std::string Rule::PrepareCommand(std::string command, const MakeOptions& options)
 {
+  command = ExpandVariables(std::move(command), options.vars);
+
   std::string target_str = target_.string();
   std::string stem_str = stem_;
     

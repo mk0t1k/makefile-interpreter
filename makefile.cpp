@@ -48,8 +48,9 @@ MakeFile::MakeFile(const std::string& filename, std::vector<std::string> targets
     MakefileParser parser(filename);
     MakefileParseResult result = parser.Parse();
 
-    rules_ = std::move(result.rules);
-    pattern_rules_ = std::move(result.pattern_rules);
+    rules_ = result.rules;
+    pattern_rules_ = result.pattern_rules;
+    vars_ = result.vars;
 
     for (const auto& phony_target : result.phony_targets)
     {
@@ -126,6 +127,9 @@ bool MakeFile::PreBuildRec(Rule& rule, const MakeOptions& options)
 
 bool MakeFile::Execute(const MakeOptions& options)
 {
+  MakeOptions run_opts = options;
+  run_opts.vars = vars_;
+
   bool any_need_rebuild = false;
 
   if (executed_targets_.empty())
@@ -137,7 +141,7 @@ bool MakeFile::Execute(const MakeOptions& options)
     if (!target_rule)
     {
       std::string error = "Can't find " + executed_target;
-      if (options.keep_going)
+      if (run_opts.keep_going)
       {
         loging::LogError(error);
         continue;
@@ -145,11 +149,11 @@ bool MakeFile::Execute(const MakeOptions& options)
       throw loging::MakeException(error);
     }
     
-    if (options.keep_going)
+    if (run_opts.keep_going)
     {
       try
       {
-        bool need = PreBuildRec(*target_rule, options);
+        bool need = PreBuildRec(*target_rule, run_opts);
         if (need)
           any_need_rebuild = true;
       }
@@ -160,7 +164,7 @@ bool MakeFile::Execute(const MakeOptions& options)
     }
     else
     {
-      bool need = PreBuildRec(*target_rule, options);
+      bool need = PreBuildRec(*target_rule, run_opts);
       if (need)
         any_need_rebuild = true;
     }

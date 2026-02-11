@@ -1,6 +1,7 @@
 #pragma once
 
 #include <fstream>
+#include <set>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -15,6 +16,8 @@ struct MakefileParseResult
 	std::vector<PatternRule> pattern_rules;
 	std::unordered_set<std::string> phony_targets;
 	std::string default_target;
+
+	std::unordered_map<std::string, std::string> vars;
 };
 
 class MakefileParser
@@ -26,4 +29,9 @@ public:
 
 private:
 	std::ifstream file_;
+
+	std::string ExpandVariables(std::string str, std::set<std::string>* in_progress = nullptr);
+
+	std::unordered_map<std::string, std::string> lazy_vars_;
+	std::unordered_map<std::string, std::string> im_var_;
 };

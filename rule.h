@@ -15,7 +15,7 @@ class Rule
   bool is_phony_ = false;
   std::string stem_;
 
-  std::string PrepareCommand(std::string command);
+  std::string PrepareCommand(std::string command, const MakeOptions& options);
 
 public:
   Rule(fs::path target,
