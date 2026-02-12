@@ -31,6 +31,7 @@ private:
 	std::ifstream file_;
 
 	std::string ExpandVariables(std::string str, std::set<std::string>* in_progress = nullptr);
+	void LoadEnvVars();
 
 	std::unordered_map<std::string, std::string> lazy_vars_;
 	std::unordered_map<std::string, std::string> im_var_;

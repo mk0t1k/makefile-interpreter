@@ -5,6 +5,12 @@
 #include <sstream>
 #include <utility>
 
+#ifdef _WIN32
+#include <windows.h>
+#else
+extern char **environ;
+#endif
+
 namespace
 {
   std::string LTrim(const std::string& str)
@@ -225,6 +231,7 @@ MakefileParseResult MakefileParser::Parse()
   MakefileParseResult result;
   std::string line;
   bool first_rule = true;
+  LoadEnvVars();
 
   while (std::getline(file_, line))
   {
@@ -316,4 +323,40 @@ MakefileParseResult MakefileParser::Parse()
   for (const auto& [k, v] : lazy_vars_)
     result.vars[k] = v;
   return result;
+}
+
+void MakefileParser::LoadEnvVars()
+{
+#ifdef _WIN32
+  LPCH env_block = GetEnvironmentStringsA();
+  if (env_block == nullptr) return;
+
+  for (LPTSTR env_var = env_block; *env_var; env_var += strlen(env_var) + 1)
+  {
+    std::string entry(env_var);
+    size_t eq_pos = entry.find('=');
+    if (eq_pos != std::string::npos)
+    {
+      std::string key = entry.substr(0, eq_pos);
+      std::string value = entry.substr(eq_pos + 1);
+      lazy_vars_.insert({key, value});
+    }
+  }
+
+  FreeEnvironmentStringsA(env_block);
+#else
+  if (environ == nullptr) return;
+
+  for (char **env = environ; *env != nullptr; ++env)
+  {
+    std::string entry(*env);
+    size_t eq_pos = entry.find('=');
+    if (eq_pos != std::string::npos)
+    {
+      std::string key = entry.substr(0, eq_pos);
+      std::string value = entry.substr(eq_pos + 1);
+      lazy_vars_.insert({key, value});
+    }
+  }
+#endif
 }
