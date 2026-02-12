@@ -87,11 +87,15 @@ Rule* MakeFile::GetRuleForTarget(const std::string& target)
     for (const std::string& dp : pr.deps)
       resolved_deps.push_back(fs::path(SubstituteStem(dp, *stem)));
 
+    std::vector<fs::path> resolved_order_only;
+    for (const std::string& dp : pr.order_only_deps)
+      resolved_order_only.push_back(fs::path(SubstituteStem(dp, *stem)));
+
     std::vector<std::string> substituted_commands;
     for (const std::string& cmd : pr.commands)
       substituted_commands.push_back(SubstituteStem(cmd, *stem));
 
-    Rule rule(fs::path(target), resolved_deps, substituted_commands, stem.value());
+    Rule rule(fs::path(target), resolved_deps, resolved_order_only, substituted_commands, stem.value());
     implicit_rules_[target] = rule;
     return &implicit_rules_[target];
   }
@@ -101,6 +105,13 @@ Rule* MakeFile::GetRuleForTarget(const std::string& target)
 bool MakeFile::PreBuildRec(Rule& rule, const MakeOptions& options)
 {
   bool need_rebuild = false;
+
+  for (const fs::path& prereq : rule.GetOrderOnlyPrerequisites())
+  {
+    Rule* prereq_rule = GetRuleForTarget(prereq.string());
+    if (prereq_rule)
+      PreBuildRec(*prereq_rule, options);
+  }
 
   for (const fs::path& dependence : rule.GetDependencies())
   {
@@ -118,9 +129,7 @@ bool MakeFile::PreBuildRec(Rule& rule, const MakeOptions& options)
     need_rebuild = true;
 
   if (!options.question_only && this_rule_needs)
-  {
     rule.Run(options);
-  }
 
   return need_rebuild;
 }

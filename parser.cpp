@@ -62,15 +62,35 @@ namespace
     fs::path target = RTrim(line.substr(0, delimetr_pos));
 
     std::string deps_str = LTrim(line.substr(delimetr_pos + 1, line.size()));
-    std::istringstream iss(deps_str);
-    fs::path dependence;
+    size_t vert_bar_pos = deps_str.find('|');
+    
     std::vector<fs::path> dependences;
+    if (vert_bar_pos != std::string::npos)
+    {
+      std::string normal_deps = RTrim(deps_str.substr(0, vert_bar_pos));
+      std::istringstream iss(normal_deps);
+      fs::path dependence;
+      while (iss >> dependence) dependences.push_back(dependence);
+    }
+    else
+    {
+      std::istringstream iss(deps_str);
+      fs::path dependence;
+      while (iss >> dependence) dependences.push_back(dependence);
+    }
 
-    while (iss >> dependence) dependences.push_back(dependence);
+    std::vector<fs::path> prereqs;
+    if (vert_bar_pos != std::string::npos)
+    {
+      std::string prereqs_str = LTrim(deps_str.substr(vert_bar_pos + 1));
+      std::istringstream iss(prereqs_str);
+      fs::path prereq;
+      while (iss >> prereq) prereqs.push_back(prereq);
+    }
 
     std::vector<std::string> commands = ParseCommands(file);
 
-    return Rule(target, dependences, commands);
+    return Rule(target, dependences, prereqs, commands);
   }
 
   PatternRule ParsePatternRule(std::string& line, std::ifstream& file)
@@ -82,13 +102,34 @@ namespace
     if (target_pattern.find('%') == std::string::npos) return PatternRule();
 
     std::string deps_str = LTrim(line.substr(delim_pos + 1, line.size()));
-    std::istringstream iss(deps_str);
+    size_t vert_bar_pos = deps_str.find('|');
+
     std::vector<std::string> deps;
-    std::string dep;
-    while (iss >> dep) deps.push_back(dep);
+    if (vert_bar_pos != std::string::npos)
+    {
+      std::string normal_deps = RTrim(deps_str.substr(0, vert_bar_pos));
+      std::istringstream iss(normal_deps);
+      std::string dep;
+      while (iss >> dep) deps.push_back(dep);
+    }
+    else
+    {
+      std::istringstream iss(deps_str);
+      std::string dep;
+      while (iss >> dep) deps.push_back(dep);
+    }
+
+    std::vector<std::string> order_only_deps;
+    if (vert_bar_pos != std::string::npos)
+    {
+      std::string prereqs_str = LTrim(deps_str.substr(vert_bar_pos + 1));
+      std::istringstream iss(prereqs_str);
+      std::string prereq;
+      while (iss >> prereq) order_only_deps.push_back(prereq);
+    }
 
     std::vector<std::string> commands = ParseCommands(file);
-    return PatternRule(target_pattern, deps, commands);
+    return PatternRule(target_pattern, deps, order_only_deps, commands);
   }
 
   std::vector<std::string> ParsePhonyTargets(std::string line)

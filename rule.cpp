@@ -209,10 +209,12 @@ std::string Rule::PrepareCommand(std::string command, const MakeOptions& options
 
 Rule::Rule(fs::path target,
        std::vector<fs::path> dependencies, 
+       std::vector<fs::path> prereqs, 
        std::vector<std::string> commands,
 			 std::string stem)
 			 : target_(target)
 			 , dependencies_(dependencies)
+       , order_only_prerequisites_(prereqs)
 			 , commands_(commands)
 			 , stem_(stem)
 {}
