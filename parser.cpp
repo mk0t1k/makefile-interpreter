@@ -34,11 +34,14 @@ namespace
   {
     std::vector<std::string> commands;
     std::string line;
+    std::streampos current_pos = file.tellg();
 
-    auto current_pos = file.tellg();
-
-    while (std::getline(file, line))
+    while (true)
     {
+      current_pos = file.tellg();
+      if (!std::getline(file, line))
+        break;
+
       std::string trimmed = LTrim(line);
       if (line.empty() || (!trimmed.empty() && trimmed[0] == '#')) continue;
 
@@ -135,7 +138,7 @@ namespace
   std::vector<std::string> ParsePhonyTargets(std::string line)
   {
     std::vector<std::string> result;
-    std::string targets = LTrim(line.substr(6, line.size()));
+    std::string targets = LTrim(line.substr(7));
     if (targets.empty()) return result;
 
     std::istringstream iss(targets);
